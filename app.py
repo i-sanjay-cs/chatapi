@@ -8,12 +8,20 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain.llms import OpenAI
 from langchain.callbacks import get_openai_callback
 from pyngrok import ngrok
+import os  # Import the os module to access environment variables
 
 app = Flask(__name__)
 CORS(app)
 
 # Example PDF file path (replace with your actual file path)
 pdf_path = "Document2.pdf"
+
+# Retrieve the OpenAI API key from environment variables
+openai_api_key = os.environ.get("OPENAI_API_KEY", "")
+
+# Check if the API key is available
+if not openai_api_key:
+    raise ValueError("OpenAI API key is missing. Set the OPENAI_API_KEY environment variable.")
 
 # extract the text
 with open(pdf_path, "rb") as pdf_file:
@@ -32,7 +40,6 @@ text_splitter = CharacterTextSplitter(
 chunks = text_splitter.split_text(text)
 
 # create embeddings with OpenAI API key
-openai_api_key = "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"  # Replace with your actual OpenAI API key
 embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
 knowledge_base = FAISS.from_texts(chunks, embeddings)
 
@@ -62,4 +69,3 @@ if __name__ == '__main__':
     public_url = ngrok.connect(5000, bind_tls=True)  # Use HTTPS
     print(" * ngrok tunnel \"{}\" -> \"https://127.0.0.1:{}/\"".format(public_url, 5000))
     app.run()
-
